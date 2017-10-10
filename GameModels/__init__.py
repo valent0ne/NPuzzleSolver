@@ -1,6 +1,6 @@
 import numpy
 import logging
-import Heuristics as H
+
 
 # final state of fifteenpuzzle game, computed by final(state) function
 finalTable = []
@@ -8,9 +8,8 @@ finalTable = []
 
 # define games
 class Game:
-    def __init__(self, initialState=None, heuristic=None):
+    def __init__(self, initialState=None):
         self.state = initialState
-        self.heuristic = heuristic
 
     def neighbors(self, state):
         out = set([])
@@ -25,16 +24,15 @@ class Game:
 
 # class that model the puzzle
 class FifteenPuzzleGame(Game):
-    def __init__(self, table, heuristic):
+    def __init__(self, table):
         # the state of this puzzle is only composed by the table representing the state
-        self.state = FifteenPuzzleState(None, table, heuristic)
+        self.state = FifteenPuzzleState(None, table)
 
     # computes the neighbors of a certain state
     # generating new states after making "moves"
     # in this case after moving the "empty tile" [0]
     def neighbors(self, state):
         logging.debug("--------------- neighbors ---------------")
-        heuristic = H.FifteenPuzzleHeuristic()
         out = set([])
         rep = state.representation
         originalTable = numpy.copy(rep.table)
@@ -77,7 +75,7 @@ class FifteenPuzzleGame(Game):
             # move zero at top and move temp tile at bottom
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos - 1, zeroYpos] = 0
-            ns = FifteenPuzzleState(state, newTable, heuristic)
+            ns = FifteenPuzzleState(state, newTable)
             logging.debug("new table after moving zero tile top:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -88,7 +86,7 @@ class FifteenPuzzleGame(Game):
             # move zero at top and move temp tile at bottom
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos + 1, zeroYpos] = 0
-            ns = FifteenPuzzleState(state, newTable, heuristic)
+            ns = FifteenPuzzleState(state, newTable)
             logging.debug("new table after moving zero tile bottom:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -99,7 +97,7 @@ class FifteenPuzzleGame(Game):
             # move zero at left and move temp tile at top
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos, zeroYpos - 1] = 0
-            ns = FifteenPuzzleState(state, newTable, heuristic)
+            ns = FifteenPuzzleState(state, newTable)
             logging.debug("new table after moving zero tile left:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -110,7 +108,7 @@ class FifteenPuzzleGame(Game):
             # move zero at right and move temp tile at top
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos, zeroYpos + 1] = 0
-            ns = FifteenPuzzleState(state, newTable, heuristic)
+            ns = FifteenPuzzleState(state, newTable)
             logging.debug("new table after moving zero tile right:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -130,17 +128,11 @@ class FifteenPuzzleRepresentation:
     def __init__(self, table):
         self.table = numpy.copy(table)
 
-    @staticmethod
-    def isAdmissible():
-        # every representation built by neighbour is admissible by construction
-        return True
-
 
 # a state has a parent state and a representation of the state
 class FifteenPuzzleState:
-    def __init__(self, parent, table, heuristic):
+    def __init__(self, parent, table):
         self.parent = parent
-        self.H = heuristic
         self.representation = FifteenPuzzleRepresentation(table)
 
     # redefined criteria on wich items of this class are

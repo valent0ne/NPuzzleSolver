@@ -3,13 +3,13 @@ import Heuristics as H
 import numpy
 import logging
 import time
-import math
 
 logging.basicConfig(level=logging.INFO)
 
 doneStates = {}
 heuristicType = 0
 heuristic = H.FifteenPuzzleHeuristic
+perturbation = 0
 
 
 # return the state with minimum heuristic value from the horizon and
@@ -22,16 +22,23 @@ def argMin(setOfStates):
             # calculate heuristic based on user choice
             if heuristicType == 1:
                 value = heuristic.H1(i)
-            else:
+            elif heuristicType == 2:
                 value = heuristic.H2(i)
+            elif heuristicType == 3:
+                value = heuristic.H3(i)
+            else:
+                value = heuristic.H4(i)
+            # add very small random value to heuristic
+            if perturbation == 1:
+                value = float(value + numpy.random.uniform(0.00001, 10 ** (-20)))
             # add couple key value (state, weight) to local set
             localDicOfStates[i] = value
     if len(localDicOfStates) > 0:
-        # return the minumim weighted state inside local set
+        # return the minumum weighted state inside local set
         out = min(localDicOfStates, key=localDicOfStates.get)
         # flag the state as done
         doneStates[out] = localDicOfStates[out]
-        logging.info("picked a state with value {} from the neighborhood".format(localDicOfStates[out]))
+        logging.info("picked state value: {}".format(localDicOfStates[out]))
     else:
         out = None
     return out
@@ -54,13 +61,11 @@ def backpath(state):
 
 # search function, it analyzes the horizon, pick the best state and iterate on the new state
 def search(game, state0):
-    i = 1
     sHorizon = set([])
     sExplored = set([])
     # add initial state
     sHorizon.add(state0)
     while len(sHorizon) > 0:
-        logging.debug("while iteration n. {}".format(i))
         logging.debug("initial horizon size: {}".format(len(sHorizon)))
 
         # pick the best state from horizon
@@ -81,72 +86,78 @@ def search(game, state0):
             sHorizon = sHorizon | (neighbors - sExplored)
             logging.debug("explored size: {}".format(len(sExplored)))
             logging.debug("new horizon size: {}".format(len(sHorizon)))
+
+            logging.info("horizon size: {}".format(len(sHorizon)))
             logging.info("visited states: {}".format(len(doneStates)))
+            logging.info("--------------------------------------------")
+
             logging.debug("---------------end of iteration--------------------")
         else:
             return None
-        i += 1
 
 
 # Main
-# generate istance from user input and let the user choose wich heuristic to use
+# generate istance from user input and let the user choose which heuristic to use
 def main():
 
-    # data = input("Insert input using this syntax x, y, z, ... : ")
-    # choose = int(input("Choose the heuristic to use (1 for manhattan distance, 2 for misplaced tiles): "))
-    # if choose != 1 and choose != 2:
-    #     logging.error("Use only 1 or 2")
-    #     exit(1)
-    # splitted = data.split(",")
-    # # converting string items to integer
-    # splitted = [int(i) for i in splitted]
-    # logging.debug("Inserted data: {}".format(splitted))
-    # logging.debug("Number of items: {}".format(len(splitted)))
-    # size = int(math.sqrt(len(splitted)))
-    #
-    # if not math.sqrt(len(splitted)).is_integer():
-    #     logging.error("You have inserted {} items, you should have inserted a number of items resulting in a NxN matrix (4, 9, 16 ...) ".format(len(splitted)))
-    #     exit(1)
-    # logging.debug("Size of matrix: {}x{}".format(size,size))
-    # # generate instance from user input (user inputs 1,3,0,2 and the matrix [[1,3],[0,2]] is generated
-    # # numpy is a package useful to handle matrices
-    # startingTable = numpy.array(splitted).reshape((size, size))
+    global heuristicType
+    global perturbation
 
     data = input("Insert the file name containing the input instance with a row per line, with each "
                  "element separated by a whitespace: ")
-    finput = open(data, "r")
-    startingTable = numpy.loadtxt(finput, delimiter=" ", dtype=int)
-    size = startingTable.shape[0]
+    try:
+        finput = open(data, "r")
+    except IOError:
+        logging.error("Can't open file.")
+        exit(1)
 
-    logging.debug("Loaded matrix:\n {}".format(startingTable))
+    starting_table = numpy.loadtxt(finput, delimiter=" ", dtype=int)
+    size = starting_table.shape[0]
 
-    choose = int(input("Choose the heuristic to use (1 for manhattan distance, 2 for misplaced tiles): "))
-    if choose != 1 and choose != 2:
-        logging.error("Use only 1 or 2")
+    logging.debug("Loaded matrix:\n {}".format(starting_table))
+
+    choose = int(input("Choose the heuristic to use: \n"
+                       "1 for Manhattan distance\n"
+                       "2 for Misplaced Tiles\n"
+                       "3 for \"improved\" Misplaced Tiles\n"
+                       "4 for Manhattan with Linear Conflict\n"
+                       "-> "))
+    if choose not in range(0, 5):
+        logging.error("Wrong input")
+        exit(1)
+
+    perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes): "))
+    if perturbation not in range(0, 2):
+        logging.error("Use only 0 or 1")
         exit(1)
 
     # set heuristic type
-    global heuristicType
     heuristicType = choose
 
     # start counting time
     start_time = time.time()
     # initialize game
     G.final(size)
-    game = G.FifteenPuzzleGame(startingTable, heuristic=heuristic)
+    game = G.FifteenPuzzleGame(starting_table)
     state0 = game.getState()
     # begin search
     path = search(game, state0)
+    if path is None:
+        logging.error("Solution not found.")
+        exit(1)
+
     # calculate elapsed time
     elapsed_time = time.time() - start_time
 
-    logging.info("Solution reached visiting {} states: ".format(len(doneStates)))
-
+    logging.info("\nComputed moves to solution: \n")
     # print solution
     i = 0
     for x in path:
-        logging.info("move {} \n {}\n".format(i, x.representation.table))
+        logging.info("move #{} \n {}\n".format(i, x.representation.table))
         i += 1
+
+    logging.info("Number of moves to reach the final state: {}".format(i-1))
+    logging.info("Solution reached going through {} states.".format(len(doneStates)))
     logging.info("Elapsed time: {} s".format(elapsed_time))
 
 

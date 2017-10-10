@@ -2,8 +2,6 @@ import numpy
 import logging
 import GameModels as G
 
-logging.basicConfig(level=logging.INFO)
-
 
 class Heuristic:
 
@@ -12,10 +10,6 @@ class Heuristic:
 
     @staticmethod
     def H1(state):
-        return 1
-
-    @staticmethod
-    def H2(state):
         return 1
 
 
@@ -28,20 +22,21 @@ class FifteenPuzzleHeuristic(Heuristic):
     def H1(state):
         logging.debug("------------------H1------------------")
         out = 0
-        table = numpy.copy(state.representation.table)
+        table = state.representation.table
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
-            # logging.debug("item n. {}".format(i))
+            logging.debug("item n. {}".format(i))
             # coordinates of i tile in this state
             xPos, yPos = numpy.where(table == i)
-            # logging.debug("coordinates of item {}: {},{}".format(i, xPos, yPos))
+            logging.debug("coordinates of item {}: {},{}".format(i, xPos, yPos))
             # coordinates of i tile in final state
             finalXpos, finalYpos = numpy.where(finalState == i)
-            # logging.debug("coordinates of where item {} should be: {},{}".format(i, finalXpos, finalYpos))
+            logging.debug("coordinates of where item {} should be: {},{}".format(i, finalXpos, finalYpos))
             distance = manhattan_distance((xPos, yPos), (finalXpos, finalYpos))
-            # logging.debug("distance: {}".format(distance))
+            logging.debug("distance: {}".format(distance))
             out += distance
+
         logging.debug("heuristic weight: {}".format(out))
         logging.debug("----------------end H1----------------\n")
         return out
@@ -52,7 +47,7 @@ class FifteenPuzzleHeuristic(Heuristic):
     def H2(state):
         logging.debug("------------------H2------------------")
         out = 0
-        table = numpy.copy(state.representation.table)
+        table = state.representation.table
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -68,9 +63,76 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("----------------end H2----------------\n")
         return out
 
+    # Number of tiles out of row plus number of tiles out of column
+    @staticmethod
+    def H3(state):
+        logging.debug("------------------H3------------------")
+        out = 0
+        table = state.representation.table
+        finalState = G.finalTable
+        logging.debug("analyzing state:\n {}".format(table))
+        for i in numpy.nditer(table):
+            if i == 0:
+                continue
+            # coordinates of i tile in this state
+            xPos, yPos = numpy.where(table == i)
+            # coordinates of i tile in final state
+            finalXpos, finalYpos = numpy.where(finalState == i)
+            if xPos != finalXpos:
+                out += 1
+            if yPos != finalYpos:
+                out += 1
+        logging.debug("heuristic weight: {}".format(out))
+        logging.debug("----------------end H3----------------\n")
+        return out
+
+    # Linear Conflict Tiles Definition: Two tiles tj and tk are in a linear conflict
+    # if tj and tk are in the same line, the goal positions of tj and tk are both in that line,
+    # tj is to the right of tk and goal position of tj is to the left of the goal position of tk.
+    # The linear conflict adds at least two moves to the Manhattan Distance of the two conflicting tiles,
+    # by forcing them to surround one another. Therefore the heuristic function will add a cost of 2 moves
+    # for each pair of conflicting tiles.
+    @staticmethod
+    def H4(state):
+        logging.debug("------------------H4------------------")
+        out = 0
+        table = state.representation.table
+        finalState = G.finalTable
+        logging.debug("analyzing state:\n {}".format(table))
+        for i in numpy.nditer(table):
+            logging.debug("item n. {}".format(i))
+            # coordinates of i tile in this state
+            xPos, yPos = numpy.where(table == i)
+            logging.debug("coordinates of item {}: {},{}".format(i, xPos, yPos))
+            # coordinates of i tile in final state
+            finalXpos, finalYpos = numpy.where(finalState == i)
+            logging.debug("coordinates of where item {} should be: {},{}".format(i, finalXpos, finalYpos))
+            distance = manhattan_distance((xPos, yPos), (finalXpos, finalYpos))
+            logging.debug("local distance: {}".format(distance))
+
+            row = numpy.array(table[xPos])
+            # tj and tk are in the same line
+            for j in numpy.nditer(row):
+                if i != j:
+                    x2Pos, y2Pos = numpy.where(table == j)
+                    finalX2pos, finalY2pos = numpy.where(finalState == j)
+                    if xPos == finalXpos and x2Pos == finalX2pos:
+                        # tj is to the right of tk and goal position of tj is to the left of the goal position of tk
+                        if y2Pos > yPos and finalY2pos < finalYpos:
+                            logging.debug("tile {} and {} are in linear conflict".format(i, j))
+                            distance += 1
+
+            out += distance
+            logging.debug("updated local distance: {}".format(distance))
+
+        logging.debug("heuristic weight: {}".format(out))
+        logging.debug("----------------end H4----------------\n")
+        return out
+
 
 # computes manhattan distance from 2 locations inside a matrix
 def manhattan_distance(start, end):
     sx, sy = start
     ex, ey = end
     return abs(ex - sx) + abs(ey - sy)
+
