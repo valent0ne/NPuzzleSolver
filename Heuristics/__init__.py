@@ -23,6 +23,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H1------------------")
         out = 0
         table = state.representation.table
+        G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -48,6 +49,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H2------------------")
         out = 0
         table = state.representation.table
+        G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -69,6 +71,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H3------------------")
         out = 0
         table = state.representation.table
+        G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -97,6 +100,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H4------------------")
         out = 0
         table = state.representation.table
+        G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):

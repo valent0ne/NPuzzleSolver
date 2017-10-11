@@ -1,13 +1,16 @@
+from os import getpid
+
+import multiprocessing
+
 import GameModels as G
 import Heuristics as H
 import numpy
 import logging
 import time
 
-logging.basicConfig(level=logging.INFO)
-
+num_workers = 1
 doneStates = {}
-heuristicType = 0
+heuristicType = 1
 heuristic = H.FifteenPuzzleHeuristic
 perturbation = 0
 
@@ -17,22 +20,14 @@ perturbation = 0
 def argMin(setOfStates):
     localDicOfStates = {}
     for i in setOfStates:
-        # avoid states already returned
         if i not in doneStates:
-            # calculate heuristic based on user choice
-            if heuristicType == 1:
-                value = heuristic.H1(i)
-            elif heuristicType == 2:
-                value = heuristic.H2(i)
-            elif heuristicType == 3:
-                value = heuristic.H3(i)
-            else:
-                value = heuristic.H4(i)
-            # add very small random value to heuristic
-            if perturbation == 1:
-                value = float(value + numpy.random.uniform(0.00001, 10 ** (-20)))
-            # add couple key value (state, weight) to local set
-            localDicOfStates[i] = value
+            localDicOfStates[i] = None
+    pool = multiprocessing.Pool(processes=num_workers)
+    returned = pool.starmap(task, localDicOfStates.items())
+    pool.close()
+    pool.join()
+    for i in returned:
+        localDicOfStates[i[0]] = i[1]
     if len(localDicOfStates) > 0:
         # return the minumum weighted state inside local set
         out = min(localDicOfStates, key=localDicOfStates.get)
@@ -42,6 +37,25 @@ def argMin(setOfStates):
     else:
         out = None
     return out
+
+
+# multiproc task
+def task(i, v):
+    logging.debug("async call processed by pid: {}".format(getpid()))
+    logging.debug("state to be evaluated: \n {}".format(i.representation.table))
+    if heuristicType == 1:
+        value = heuristic.H1(i)
+    elif heuristicType == 2:
+        value = heuristic.H2(i)
+    elif heuristicType == 3:
+        value = heuristic.H3(i)
+    else:
+        value = heuristic.H4(i)
+    # add very small random value to heuristic
+    if perturbation == 1:
+        value = float(value + numpy.random.uniform(0.00001, 10 ** (-20)))
+    logging.debug("pid: {}, returned value {}".format(getpid(), value))
+    return i, value
 
 
 # pick a state from horizon
@@ -102,6 +116,7 @@ def main():
 
     global heuristicType
     global perturbation
+    global num_workers
 
     data = input("Insert the file name containing the input instance with a row per line, with each "
                  "element separated by a whitespace: ")
@@ -114,8 +129,6 @@ def main():
     starting_table = numpy.loadtxt(finput, delimiter=" ", dtype=int)
     size = starting_table.shape[0]
 
-    logging.debug("Loaded matrix:\n {}".format(starting_table))
-
     choose = int(input("Choose the heuristic to use: \n"
                        "1 for Manhattan distance\n"
                        "2 for Misplaced Tiles\n"
@@ -126,13 +139,20 @@ def main():
         logging.error("Wrong input")
         exit(1)
 
+    # set heuristic type
+    heuristicType = choose
+
     perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes): "))
     if perturbation not in range(0, 2):
         logging.error("Use only 0 or 1")
         exit(1)
 
-    # set heuristic type
-    heuristicType = choose
+    num_workers = int(input("Insert number of processes: "))
+    logging_level = input("Insert logging level (DEBUG or INFO): ")
+
+    logging.basicConfig(level=logging_level)
+
+    logging.debug("Loaded matrix:\n {}".format(starting_table))
 
     # start counting time
     start_time = time.time()
@@ -156,6 +176,7 @@ def main():
         logging.info("move #{} \n {}\n".format(i, x.representation.table))
         i += 1
 
+    logging.info("Number of processes: {}".format(num_workers))
     logging.info("Number of moves to reach the final state: {}".format(i-1))
     logging.info("Solution reached going through {} states.".format(len(doneStates)))
     logging.info("Elapsed time: {} s".format(elapsed_time))
