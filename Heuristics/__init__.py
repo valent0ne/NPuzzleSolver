@@ -1,6 +1,10 @@
 import numpy
 import logging
 import GameModels as G
+import Heuristics as he
+import main as m
+
+heuristicType = m.heuristicType
 
 
 class Heuristic:
@@ -22,11 +26,13 @@ class FifteenPuzzleHeuristic(Heuristic):
     def H1(state):
         logging.debug("------------------H1------------------")
         out = 0
-        table = state.representation.table
+        table = state
         G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
+            if i == 0:
+                continue
             logging.debug("item n. {}".format(i))
             # coordinates of i tile in this state
             xPos, yPos = numpy.where(table == i)
@@ -48,7 +54,7 @@ class FifteenPuzzleHeuristic(Heuristic):
     def H2(state):
         logging.debug("------------------H2------------------")
         out = 0
-        table = state.representation.table
+        table = state
         G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
@@ -70,7 +76,7 @@ class FifteenPuzzleHeuristic(Heuristic):
     def H3(state):
         logging.debug("------------------H3------------------")
         out = 0
-        table = state.representation.table
+        table = state
         G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
@@ -99,11 +105,13 @@ class FifteenPuzzleHeuristic(Heuristic):
     def H4(state):
         logging.debug("------------------H4------------------")
         out = 0
-        table = state.representation.table
+        table = state
         G.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
+            if i == 0:
+                continue
             logging.debug("item n. {}".format(i))
             # coordinates of i tile in this state
             xPos, yPos = numpy.where(table == i)
@@ -132,6 +140,30 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("heuristic weight: {}".format(out))
         logging.debug("----------------end H4----------------\n")
         return out
+
+    # hybtid
+    @staticmethod
+    def H5(i):
+        h1 = FifteenPuzzleHeuristic.H1(i)
+        h2 = FifteenPuzzleHeuristic.H2(i)*1.02
+        h4 = FifteenPuzzleHeuristic.H4(i)*1.01
+
+        #return min(h1, h2, h4)
+        return (h1+h1+h3)/3
+
+    @staticmethod
+    def get_h(i):
+        if heuristicType == 1:
+            value = he.FifteenPuzzleHeuristic.H1(i)
+        elif heuristicType == 2:
+            value = he.FifteenPuzzleHeuristic.H2(i)
+        elif heuristicType == 3:
+            value = he.FifteenPuzzleHeuristic.H3(i)
+        elif heuristicType == 4:
+            value = he.FifteenPuzzleHeuristic.H4(i)
+        else:
+            value = he.FifteenPuzzleHeuristic.H5(i)
+        return value
 
 
 # computes manhattan distance from 2 locations inside a matrix

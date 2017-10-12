@@ -1,10 +1,10 @@
 import numpy
 import logging
+import Heuristics as heur
 
 
 # final state of fifteenpuzzle game, computed by final(state) function
 finalTable = []
-
 
 # define games
 class Game:
@@ -126,7 +126,7 @@ class FifteenPuzzleGame(Game):
 # representation of a state
 class FifteenPuzzleRepresentation:
     def __init__(self, table):
-        self.table = numpy.copy(table)
+        self.table = table
 
 
 # a state has a parent state and a representation of the state
@@ -134,6 +134,7 @@ class FifteenPuzzleState:
     def __init__(self, parent, table):
         self.parent = parent
         self.representation = FifteenPuzzleRepresentation(table)
+        self.heuristic = heur.FifteenPuzzleHeuristic.get_h(table)
 
     # redefined criteria on wich items of this class are
     # compared to be able to correctly use set operators
@@ -146,7 +147,7 @@ class FifteenPuzzleState:
         return not numpy.array_equal(self.representation.table, other.representation.table)
 
     def __hash__(self):
-        return hash(self.representation.table.__hash__)
+        return hash(str(self.representation.table))
 
 
 # computes the final table based on dimensions provided by the user
