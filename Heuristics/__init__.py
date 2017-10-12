@@ -1,9 +1,12 @@
 import numpy
 import logging
 import GameModels as G
-import Heuristics as he
 import main as m
 
+differentiator = float(1.0e-10)
+increaser = float(1.0e-10)
+current_min_value = 9999
+perturbation = m.perturbation
 heuristicType = m.heuristicType
 
 
@@ -144,25 +147,38 @@ class FifteenPuzzleHeuristic(Heuristic):
     # hybtid
     @staticmethod
     def H5(i):
-        h1 = FifteenPuzzleHeuristic.H1(i)
-        h2 = FifteenPuzzleHeuristic.H2(i)*1.02
-        h4 = FifteenPuzzleHeuristic.H4(i)*1.01
+        h1 = FifteenPuzzleHeuristic.H1(i)*1.05
+        h2 = FifteenPuzzleHeuristic.H2(i)*1.01
+        h4 = FifteenPuzzleHeuristic.H4(i)*1.03
 
         #return min(h1, h2, h4)
-        return (h1+h1+h3)/3
+        return (h1+h2+h4)/3
 
     @staticmethod
     def get_h(i):
+        logging.info(m.heuristicType)
         if heuristicType == 1:
-            value = he.FifteenPuzzleHeuristic.H1(i)
+            value = FifteenPuzzleHeuristic.H1(i)
         elif heuristicType == 2:
-            value = he.FifteenPuzzleHeuristic.H2(i)
+            value = FifteenPuzzleHeuristic.H2(i)
         elif heuristicType == 3:
-            value = he.FifteenPuzzleHeuristic.H3(i)
+            value = FifteenPuzzleHeuristic.H3(i)
         elif heuristicType == 4:
-            value = he.FifteenPuzzleHeuristic.H4(i)
+            value = FifteenPuzzleHeuristic.H4(i)
         else:
-            value = he.FifteenPuzzleHeuristic.H5(i)
+            value = FifteenPuzzleHeuristic.H5(i)
+        if perturbation == 1:
+            global differentiator
+            global current_min_value
+            # fix this, reset differentiator when better weight is found
+            if value < current_min_value:
+                current_min_value = value
+                differentiator = increaser
+                return value
+
+            value = float(value + differentiator)
+            differentiator += increaser
+
         return value
 
 

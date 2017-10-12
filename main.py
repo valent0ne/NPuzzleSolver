@@ -4,8 +4,9 @@ import numpy
 import logging
 import time
 
+# TODO fix this
 heuristicType = 1
-perturbation = 0
+perturbation = 1
 
 
 # return the state with minimum heuristic value from the horizon and
@@ -60,7 +61,8 @@ def search(game, state0):
             logging.debug("pre-expand horizon size: {}".format(len(sHorizon)))
             logging.debug("neighbors size: {}".format(len(neighbors)))
             # compute new horizon, avoiding already explored states
-            sHorizon = (sHorizon | neighbors) - sExplored
+            sHorizon = sHorizon | neighbors
+            sHorizon = sHorizon - sExplored
             # logging.debug("explored size: {}".format(len(sExplored)))
             logging.debug("new horizon size: {}".format(len(sHorizon)))
             logging.info("horizon size: {}".format(len(sHorizon)))
@@ -75,10 +77,8 @@ def search(game, state0):
 # Main
 # generate istance from user input and let the user choose which heuristic to use
 def main():
-
-    global heuristicType
     global perturbation
-    global logging_level
+    global heuristicType
 
     data = input("Insert the file name containing the input instance with a row per line, with each "
                  "element separated by a whitespace, default \"data\": ")
@@ -98,23 +98,27 @@ def main():
                            "4 for Manhattan with Linear Conflict\n"
                            "5 hybrid\n"
                            "default is 1:  "))
-    except Exception:
+        if choose != 1 and choose != 2 and choose != 3 and choose != 4 and choose != 5:
+            raise Exception
+    except:
         choose = 1
 
     # set heuristic type
     heuristicType = choose
 
+
     try:
         perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes, default = no): "))
+        if perturbation != 0 and perturbation != 1:
+            raise Exception
     except:
-        perturbation = 0
+        perturbation = 1
 
     logging_level = input("Insert logging level (DEBUG or INFO, default = INFO): ")
     if logging_level != "INFO" and logging_level != "DEBUG":
         logging.basicConfig(level='INFO')
     else:
         logging.basicConfig(level=logging_level)
-
 
     logging.debug("Loaded matrix:\n {}".format(starting_table))
 
@@ -140,6 +144,8 @@ def main():
         logging.info("move #{} \n {}\n".format(i, x.representation.table))
         i += 1
 
+    logging.info("Used heuristic: {}".format(heuristicType))
+    logging.info("Used perturbation: {}".format(perturbation))
     logging.info("Number of moves to reach the final state: {}".format(i-1))
     logging.info("Solution reached analyzing {} states".format(num_visited_states))
     logging.info("Elapsed time: {} s".format(elapsed_time))
