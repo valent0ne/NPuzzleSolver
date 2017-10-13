@@ -24,9 +24,9 @@ class Game:
 
 # class that model the puzzle
 class FifteenPuzzleGame(Game):
-    def __init__(self, table):
+    def __init__(self, table, conf):
         # the state of this puzzle is only composed by the table representing the state
-        self.state = FifteenPuzzleState(None, table)
+        self.state = FifteenPuzzleState(None, table, conf)
 
     # computes the neighbors of a certain state
     # generating new states after making "moves"
@@ -75,7 +75,7 @@ class FifteenPuzzleGame(Game):
             # move zero at top and move temp tile at bottom
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos - 1, zeroYpos] = 0
-            ns = FifteenPuzzleState(state, newTable)
+            ns = FifteenPuzzleState(state, newTable, state.configuration)
             logging.debug("new table after moving zero tile top:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -86,7 +86,7 @@ class FifteenPuzzleGame(Game):
             # move zero at top and move temp tile at bottom
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos + 1, zeroYpos] = 0
-            ns = FifteenPuzzleState(state, newTable)
+            ns = FifteenPuzzleState(state, newTable, state.configuration)
             logging.debug("new table after moving zero tile bottom:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -97,7 +97,7 @@ class FifteenPuzzleGame(Game):
             # move zero at left and move temp tile at top
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos, zeroYpos - 1] = 0
-            ns = FifteenPuzzleState(state, newTable)
+            ns = FifteenPuzzleState(state, newTable, state.configuration)
             logging.debug("new table after moving zero tile left:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -108,7 +108,7 @@ class FifteenPuzzleGame(Game):
             # move zero at right and move temp tile at top
             newTable[zeroXpos, zeroYpos] = temp
             newTable[zeroXpos, zeroYpos + 1] = 0
-            ns = FifteenPuzzleState(state, newTable)
+            ns = FifteenPuzzleState(state, newTable, state.configuration)
             logging.debug("new table after moving zero tile right:\n {}".format(ns.representation.table))
             out.add(ns)
 
@@ -131,10 +131,11 @@ class FifteenPuzzleRepresentation:
 
 # a state has a parent state and a representation of the state
 class FifteenPuzzleState:
-    def __init__(self, parent, table):
+    def __init__(self, parent, table, configuration):
         self.parent = parent
         self.representation = FifteenPuzzleRepresentation(table)
-        self.heuristic = heur.FifteenPuzzleHeuristic.get_h(table)
+        self.configuration = configuration
+        self.heuristic = heur.FifteenPuzzleHeuristic.get_h(self)
 
     # redefined criteria on wich items of this class are
     # compared to be able to correctly use set operators

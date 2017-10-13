@@ -1,13 +1,9 @@
 from operator import attrgetter
 import GameModels as G
+import Configuration as conf
 import numpy
 import logging
 import time
-
-# TODO fix this
-heuristicType = 1
-perturbation = 1
-
 
 # return the state with minimum heuristic value from the horizon and
 # add that state to the "done" set, so it will not be returned anymore
@@ -77,8 +73,6 @@ def search(game, state0):
 # Main
 # generate istance from user input and let the user choose which heuristic to use
 def main():
-    global perturbation
-    global heuristicType
 
     data = input("Insert the file name containing the input instance with a row per line, with each "
                  "element separated by a whitespace, default \"data\": ")
@@ -92,24 +86,21 @@ def main():
 
     try:
         choose = int(input("Choose the heuristic to use: \n"
-                           "1 for Manhattan distance\n"
-                           "2 for Misplaced Tiles\n"
-                           "3 for \"improved\" Misplaced Tiles\n"
-                           "4 for Manhattan with Linear Conflict\n"
-                           "5 hybrid\n"
-                           "default is 1:  "))
-        if choose != 1 and choose != 2 and choose != 3 and choose != 4 and choose != 5:
+                           "[1] for Manhattan distance\n"
+                           "[2] for Misplaced Tiles\n"
+                           "[3] for \"improved\" Misplaced Tiles\n"
+                           "[4] for Manhattan with Linear Conflict\n"
+                           "[5] hybrid\n"
+                           "default is [1]:  "))
+        if choose not in range(6):
             raise Exception
     except:
         choose = 1
 
-    # set heuristic type
-    heuristicType = choose
-
 
     try:
         perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes, default = no): "))
-        if perturbation != 0 and perturbation != 1:
+        if perturbation not in range(2):
             raise Exception
     except:
         perturbation = 1
@@ -122,11 +113,13 @@ def main():
 
     logging.debug("Loaded matrix:\n {}".format(starting_table))
 
+    c = conf.Configuration(choose, perturbation)
+
     # start counting time
     start_time = time.time()
     # initialize game
     G.final(size)
-    game = G.FifteenPuzzleGame(starting_table)
+    game = G.FifteenPuzzleGame(starting_table, c)
     state0 = game.getState()
     # begin search
     path, num_visited_states = search(game, state0)
@@ -144,8 +137,8 @@ def main():
         logging.info("move #{} \n {}\n".format(i, x.representation.table))
         i += 1
 
-    logging.info("Used heuristic: {}".format(heuristicType))
-    logging.info("Used perturbation: {}".format(perturbation))
+    logging.info("Initial state: \n{}".format(starting_table))
+    logging.info("Used heuristic: [{}]".format(c.heuristic_type))
     logging.info("Number of moves to reach the final state: {}".format(i-1))
     logging.info("Solution reached analyzing {} states".format(num_visited_states))
     logging.info("Elapsed time: {} s".format(elapsed_time))

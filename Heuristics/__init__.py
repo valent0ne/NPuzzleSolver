@@ -1,13 +1,11 @@
 import numpy
 import logging
 import GameModels as G
-import main as m
 
-differentiator = float(1.0e-10)
-increaser = float(1.0e-10)
+default_differentiator = float(1.0e-10)
+increaser = default_differentiator
 current_min_value = 9999
-perturbation = m.perturbation
-heuristicType = m.heuristicType
+container = {}
 
 
 class Heuristic:
@@ -49,7 +47,7 @@ class FifteenPuzzleHeuristic(Heuristic):
 
         logging.debug("heuristic weight: {}".format(out))
         logging.debug("----------------end H1----------------\n")
-        return out
+        return float(out)
 
     # count of misplaced tiles, skipping the 0 tile; higher H value
     # means higher distance from solution
@@ -72,7 +70,7 @@ class FifteenPuzzleHeuristic(Heuristic):
                 out += 1
         logging.debug("heuristic weight: {}".format(out))
         logging.debug("----------------end H2----------------\n")
-        return out
+        return float(out)
 
     # Number of tiles out of row plus number of tiles out of column
     @staticmethod
@@ -96,7 +94,7 @@ class FifteenPuzzleHeuristic(Heuristic):
                 out += 1
         logging.debug("heuristic weight: {}".format(out))
         logging.debug("----------------end H3----------------\n")
-        return out
+        return float(out)
 
     # Linear Conflict Tiles Definition: Two tiles tj and tk are in a linear conflict
     # if tj and tk are in the same line, the goal positions of tj and tk are both in that line,
@@ -142,7 +140,7 @@ class FifteenPuzzleHeuristic(Heuristic):
 
         logging.debug("heuristic weight: {}".format(out))
         logging.debug("----------------end H4----------------\n")
-        return out
+        return float(out)
 
     # hybtid
     @staticmethod
@@ -156,30 +154,37 @@ class FifteenPuzzleHeuristic(Heuristic):
 
     @staticmethod
     def get_h(i):
-        logging.info(m.heuristicType)
-        if heuristicType == 1:
-            value = FifteenPuzzleHeuristic.H1(i)
-        elif heuristicType == 2:
-            value = FifteenPuzzleHeuristic.H2(i)
-        elif heuristicType == 3:
-            value = FifteenPuzzleHeuristic.H3(i)
-        elif heuristicType == 4:
-            value = FifteenPuzzleHeuristic.H4(i)
+
+        heuristic_type = i.configuration.heuristic_type
+        perturbation = i.configuration.perturbation
+        table = i.representation.table
+
+        if heuristic_type == 1:
+            value = FifteenPuzzleHeuristic.H1(table)
+        elif heuristic_type == 2:
+            value = FifteenPuzzleHeuristic.H2(table)
+        elif heuristic_type == 3:
+            value = FifteenPuzzleHeuristic.H3(table)
+        elif heuristic_type == 4:
+            value = FifteenPuzzleHeuristic.H4(table)
         else:
-            value = FifteenPuzzleHeuristic.H5(i)
+            value = FifteenPuzzleHeuristic.H5(table)
+
+        out = value
+
         if perturbation == 1:
-            global differentiator
-            global current_min_value
-            # fix this, reset differentiator when better weight is found
-            if value < current_min_value:
-                current_min_value = value
-                differentiator = increaser
-                return value
+            global container
 
-            value = float(value + differentiator)
-            differentiator += increaser
+            if value not in container:
+                container[value] = default_differentiator
 
-        return value
+            out += container[value]
+            # logging.info("value: {} container[value]: {} out: {}".format(value, container[value], out))
+
+            container[value] += increaser
+            # logging.info("increased container[value]: {}".format(container[value]))
+
+        return out
 
 
 # computes manhattan distance from 2 locations inside a matrix
