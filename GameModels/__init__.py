@@ -122,6 +122,17 @@ class FifteenPuzzleGame(Game):
         logging.debug("solution returned: {}".format(out))
         return out
 
+    # computes the final table based on dimensions provided by the user
+    @staticmethod
+    def final(size):
+        # fill the matrix with values from 1 to len and add 0 to last tile
+        global finalTable
+        finalTable = numpy.arange(1, (size * size) + 1, 1)
+        numpy.put(finalTable, [size * size], [0], mode="clip")
+        finalTable = finalTable.reshape(size, size)
+        logging.debug("finalTable:\n {}".format(finalTable))
+        return
+
 
 # representation of a state
 class FifteenPuzzleRepresentation:
@@ -135,6 +146,11 @@ class FifteenPuzzleState:
         self.parent = parent
         self.representation = FifteenPuzzleRepresentation(table)
         self.configuration = configuration
+        if parent is None:
+            self.moves = 1
+        else:
+            self.moves = parent.moves + 1
+
         self.heuristic = heur.FifteenPuzzleHeuristic.get_h(self)
 
     # redefined criteria on wich items of this class are
@@ -142,21 +158,10 @@ class FifteenPuzzleState:
     # saying that 2 states are equal if the table that represent
     # the state is the same
     def __eq__(self, other):
-        return numpy.array_equal(self.representation.table, other.representation.table)
-
-    def __ne__(self, other):
-        return not numpy.array_equal(self.representation.table, other.representation.table)
+        return str(self.representation.table) == str(other.representation.table)
 
     def __hash__(self):
         return hash(str(self.representation.table))
 
 
-# computes the final table based on dimensions provided by the user
-def final(size):
-    # fill the matrix with values from 1 to len and add 0 to last tile
-    global finalTable
-    finalTable = numpy.arange(1, (size * size) + 1, 1)
-    numpy.put(finalTable, [size * size], [0], mode="clip")
-    finalTable = finalTable.reshape(size, size)
-    logging.debug("finalTable:\n {}".format(finalTable))
-    return
+

@@ -4,6 +4,7 @@ import Configuration as conf
 import numpy
 import logging
 import time
+import os
 
 # return the state with minimum heuristic value from the horizon and
 # add that state to the "done" set, so it will not be returned anymore
@@ -34,7 +35,8 @@ def backpath(state):
 
 
 # search function, it analyzes the horizon, pick the best state and iterate on the new state
-def search(game, state0):
+def search(game, state0, update, start_time):
+    i=0
     sHorizon = set([])
     sExplored = set([])
     # add initial state
@@ -51,31 +53,48 @@ def search(game, state0):
                 return backpath(view), len(sExplored)
             # add state to explored
             sExplored.add(view)
+            distance_from_goal = view.heuristic - view.moves
             logging.debug("added view to explored:\n {}".format(view.representation.table))
             # discover neighbors (inside GameModels)
             neighbors = game.neighbors(view)
             logging.debug("pre-expand horizon size: {}".format(len(sHorizon)))
             logging.debug("neighbors size: {}".format(len(neighbors)))
             # compute new horizon, avoiding already explored states
-            sHorizon = sHorizon | neighbors
-            sHorizon = sHorizon - sExplored
+            sHorizon = (sHorizon | neighbors) - sExplored
+            
+            if i == update:
+                i = 0
+                print("\nelapsed time: {0:.3f} s".format(time.time()-start_time))
+                print("horizon size: {}".format(len(sHorizon)))
+                print("visited states: {}".format(len(sExplored)))
+                print("approximated distance from solution: {}".format(distance_from_goal))
+                print("current picked state representation:\n {}".format(view.representation.table))
+            i += 1
+            
             # logging.debug("explored size: {}".format(len(sExplored)))
-            logging.debug("new horizon size: {}".format(len(sHorizon)))
-            logging.debug("horizon size: {}".format(len(sHorizon)))
-            logging.debug("visited states: {}".format(len(sExplored)))
-            logging.debug("--------------------------------------------")
+            # logging.debug("new horizon size: {}".format(len(sHorizon)))
+            # logging.debug("horizon size: {}".format(len(sHorizon)))
+            # logging.debug("visited states: {}".format(len(sExplored)))
+            # logging.debug("--------------------------------------------")
 
-            logging.debug("---------------end of iteration--------------------")
+            # logging.debug("---------------end of iteration--------------------")
+            
         else:
             return None
+
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
+
 
 
 # Main
 # generate istance from user input and let the user choose which heuristic to use
 def main():
 
-    data = input("Insert the file name containing the input instance with a row per line, with each "
-                 "element separated by a whitespace, default \"data\": ")
+    cls()
+
+    data = input("Insert the file name containing the input instance with a row per line, \n"
+                 "with each element separated by a whitespace, default \"intputs/data\": ")
     try:
         finput = open(data, "r")
     except IOError:
@@ -99,11 +118,16 @@ def main():
 
 
     try:
-        perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes, default = yes): "))
+        perturbation = int(input("Do you want to perturbate the heuristic values? (0 = no, 1 = yes, default = no): "))
         if perturbation not in range(2):
             raise Exception
     except:
-        perturbation = 1
+        perturbation = 0
+
+    try:
+        update = int(input("You will get updates every X iterations, insert X (default = 1000): "))
+    except:
+        update = 1000
 
     logging_level = input("Insert logging level (DEBUG or INFO, default = INFO): ")
     if logging_level != "INFO" and logging_level != "DEBUG":
@@ -120,11 +144,11 @@ def main():
     # start counting time
     start_time = time.time()
     # initialize game
-    G.final(size)
     game = G.FifteenPuzzleGame(starting_table, c)
+    G.FifteenPuzzleGame.final(size)
     state0 = game.getState()
     # begin search
-    path, num_visited_states = search(game, state0)
+    path, num_visited_states = search(game, state0, update, start_time)
     if path is None:
         logging.error("Solution not found.")
         exit(1)
@@ -143,7 +167,7 @@ def main():
     print("Used heuristic: [{}]".format(c.heuristic_type))
     print("Number of moves to reach the final state: {}".format(i-1))
     print("Solution reached analyzing {} states".format(num_visited_states))
-    print("Elapsed time: {} s".format(elapsed_time))
+    print("Elapsed time: {0:.3f} s".format(elapsed_time))
 
 
 if __name__ == "__main__":

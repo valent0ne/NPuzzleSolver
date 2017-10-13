@@ -2,8 +2,8 @@ import numpy
 import logging
 import GameModels as G
 
-default_differentiator = float(1.0e-20)
-increaser = default_differentiator
+default_differentiator = float(1.0e-10)
+increaser = float(1.0e-10)
 container = {}
 
 
@@ -27,7 +27,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H1------------------")
         out = 0
         table = state
-        G.final(table.shape[0])
+        G.FifteenPuzzleGame.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -55,7 +55,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H2------------------")
         out = 0
         table = state
-        G.final(table.shape[0])
+        G.FifteenPuzzleGame.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -77,7 +77,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H3------------------")
         out = 0
         table = state
-        G.final(table.shape[0])
+        G.FifteenPuzzleGame.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -106,7 +106,7 @@ class FifteenPuzzleHeuristic(Heuristic):
         logging.debug("------------------H4------------------")
         out = 0
         table = state
-        G.final(table.shape[0])
+        G.FifteenPuzzleGame.final(table.shape[0])
         finalState = G.finalTable
         logging.debug("analyzing state:\n {}".format(table))
         for i in numpy.nditer(table):
@@ -169,7 +169,9 @@ class FifteenPuzzleHeuristic(Heuristic):
         else:
             value = FifteenPuzzleHeuristic.H5(table)
 
-        out = value
+        logging.debug("value: {}".format(value))
+        out = value + i.moves
+        logging.debug("new value+moves: {}".format(out))
 
         if perturbation == 1:
             global container
@@ -178,10 +180,10 @@ class FifteenPuzzleHeuristic(Heuristic):
                 container[value] = default_differentiator
 
             out += container[value]
-            # logging.info("value: {} container[value]: {} out: {}".format(value, container[value], out))
+            logging.debug("value: {} container[value]: {} out: {}".format(value, container[value], out))
 
             container[value] += increaser
-            # logging.info("increased container[value]: {}".format(container[value]))
+            logging.debug("increased container[value]: {}".format(container[value]))
 
         return out
 
