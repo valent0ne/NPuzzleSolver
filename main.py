@@ -12,7 +12,7 @@ def argMin(setOfStates):
         # return the minumum weighted state inside local set
         out = min(setOfStates, key=attrgetter('heuristic'))
         # flag the state as done
-        logging.info("picked state value: {}".format(out.heuristic))
+        logging.debug("picked state value: {}".format(out.heuristic))
     else:
         out = None
     return out
@@ -61,9 +61,9 @@ def search(game, state0):
             sHorizon = sHorizon - sExplored
             # logging.debug("explored size: {}".format(len(sExplored)))
             logging.debug("new horizon size: {}".format(len(sHorizon)))
-            logging.info("horizon size: {}".format(len(sHorizon)))
-            logging.info("visited states: {}".format(len(sExplored)))
-            logging.info("--------------------------------------------")
+            logging.debug("horizon size: {}".format(len(sHorizon)))
+            logging.debug("visited states: {}".format(len(sExplored)))
+            logging.debug("--------------------------------------------")
 
             logging.debug("---------------end of iteration--------------------")
         else:
@@ -86,11 +86,11 @@ def main():
 
     try:
         choose = int(input("Choose the heuristic to use: \n"
-                           "[1] for Manhattan distance\n"
-                           "[2] for Misplaced Tiles\n"
-                           "[3] for \"improved\" Misplaced Tiles\n"
-                           "[4] for Manhattan with Linear Conflict\n"
-                           "[5] hybrid\n"
+                           "\t[1] for Manhattan distance\n"
+                           "\t[2] for Misplaced Tiles\n"
+                           "\t[3] for \"improved\" Misplaced Tiles\n"
+                           "\t[4] for Manhattan with Linear Conflict\n"
+                           "\t[5] hybrid\n"
                            "default is [1]:  "))
         if choose not in range(6):
             raise Exception
@@ -99,7 +99,7 @@ def main():
 
 
     try:
-        perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes, default = no): "))
+        perturbation = int(input("Do you want to perturbate the heuristic values (0 = no, 1 = yes, default = yes): "))
         if perturbation not in range(2):
             raise Exception
     except:
@@ -111,9 +111,11 @@ def main():
     else:
         logging.basicConfig(level=logging_level)
 
-    logging.debug("Loaded matrix:\n {}".format(starting_table))
+    print("\nLoaded matrix:\n {}".format(starting_table))
 
     c = conf.Configuration(choose, perturbation)
+
+    print("\ncomputing...")
 
     # start counting time
     start_time = time.time()
@@ -130,18 +132,18 @@ def main():
     # calculate elapsed time
     elapsed_time = time.time() - start_time
 
-    logging.info("\nComputed moves to solution: \n")
+    print("\nComputed moves to solution: \n")
     # print solution
     i = 0
     for x in path:
-        logging.info("move #{} \n {}\n".format(i, x.representation.table))
+        print("move #{} \n {}\n".format(i, x.representation.table))
         i += 1
 
-    logging.info("Initial state: \n{}".format(starting_table))
-    logging.info("Used heuristic: [{}]".format(c.heuristic_type))
-    logging.info("Number of moves to reach the final state: {}".format(i-1))
-    logging.info("Solution reached analyzing {} states".format(num_visited_states))
-    logging.info("Elapsed time: {} s".format(elapsed_time))
+    print("\nInitial state: \n{}".format(starting_table))
+    print("Used heuristic: [{}]".format(c.heuristic_type))
+    print("Number of moves to reach the final state: {}".format(i-1))
+    print("Solution reached analyzing {} states".format(num_visited_states))
+    print("Elapsed time: {} s".format(elapsed_time))
 
 
 if __name__ == "__main__":

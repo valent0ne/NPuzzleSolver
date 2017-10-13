@@ -2,9 +2,8 @@ import numpy
 import logging
 import GameModels as G
 
-default_differentiator = float(1.0e-10)
+default_differentiator = float(1.0e-20)
 increaser = default_differentiator
-current_min_value = 9999
 container = {}
 
 
