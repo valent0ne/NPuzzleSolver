@@ -39,9 +39,11 @@ def search(game, state0, update, start_time):
     i=0
     sHorizon = set([])
     sExplored = set([])
+    distances = set([])
     # add initial state
     sHorizon.add(state0)
     while len(sHorizon) > 0:
+        i += 1
         logging.debug("initial horizon size: {}".format(len(sHorizon)))
 
         # pick the best state from horizon
@@ -54,6 +56,7 @@ def search(game, state0, update, start_time):
             # add state to explored
             sExplored.add(view)
             distance_from_goal = view.heuristic - view.moves
+            distances.add(distance_from_goal)
             logging.debug("added view to explored:\n {}".format(view.representation.table))
             # discover neighbors (inside GameModels)
             neighbors = game.neighbors(view)
@@ -67,9 +70,10 @@ def search(game, state0, update, start_time):
                 print("\nelapsed time: {0:.3f} s".format(time.time()-start_time))
                 print("horizon size: {}".format(len(sHorizon)))
                 print("visited states: {}".format(len(sExplored)))
-                print("approximated distance from solution: {}".format(distance_from_goal))
+                print("minimum reached distance from solution: {}".format(min(distances)))
+                print("current picked state distance from solution: {}".format(distance_from_goal))
                 print("current picked state representation:\n {}".format(view.representation.table))
-            i += 1
+            
             
             # logging.debug("explored size: {}".format(len(sExplored)))
             # logging.debug("new horizon size: {}".format(len(sHorizon)))
@@ -94,11 +98,11 @@ def main():
     cls()
 
     data = input("Insert the file name containing the input instance with a row per line, \n"
-                 "with each element separated by a whitespace, default \"intputs/data\": ")
+                 "with each element separated by a whitespace, default \"instances/data.txt\": ")
     try:
         finput = open(data, "r")
     except IOError:
-        finput = open("data", "r")
+        finput = open("instances/data.txt", "r")
 
     starting_table = numpy.loadtxt(finput, delimiter=" ", dtype=int)
     size = starting_table.shape[0]
@@ -164,7 +168,7 @@ def main():
         i += 1
 
     print("\nInitial state: \n{}".format(starting_table))
-    print("Used heuristic: [{}]".format(c.heuristic_type))
+    print("Used heuristic: {}".format(c.heuristic_type))
     print("Number of moves to reach the final state: {}".format(i-1))
     print("Solution reached analyzing {} states".format(num_visited_states))
     print("Elapsed time: {0:.3f} s".format(elapsed_time))
